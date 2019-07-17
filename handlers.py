@@ -1,15 +1,9 @@
-from anthill.framework.handlers import (
-    RequestHandler,
-    LoginHandlerMixin,
-    LogoutHandlerMixin,
-    UserHandlerMixin,
-    AuthHandlerMixin,
-    UserRequestHandler
-)
+from anthill.framework.handlers import RequestHandler
+from anthill.platform.handlers import UserHandlerMixin, LoginHandlerMixin, LogoutHandlerMixin
 from anthill.framework.auth import authenticate
 
 
-class LoginHandler(LoginHandlerMixin, UserRequestHandler):
+class LoginHandler(LoginHandlerMixin, RequestHandler, UserHandlerMixin):
     async def post(self, *args, **kwargs):
         credentials = self.get_credentials()
         user = await authenticate(self.request, **credentials)
@@ -20,7 +14,7 @@ class LoginHandler(LoginHandlerMixin, UserRequestHandler):
         return dict(map(lambda x: (x, self.get_argument(x)), field_names))
 
 
-class LogoutHandler(LogoutHandlerMixin, UserRequestHandler):
+class LogoutHandler(LogoutHandlerMixin, RequestHandler, UserHandlerMixin):
     async def get(self, *args, **kwargs):
         await self.logout()
 
@@ -28,5 +22,5 @@ class LogoutHandler(LogoutHandlerMixin, UserRequestHandler):
         await self.get(*args, **kwargs)
 
 
-class RegisterHandler(RequestHandler):
+class RegisterHandler(RequestHandler, UserHandlerMixin):
     pass
