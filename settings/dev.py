@@ -104,4 +104,4 @@ LOGGING = {
     }
 }
 
-SOCIAL_AUTH_PIPELINE.insert(0, 'anthill.framework.auth.social.pipeline.debug.debug')
+PIPELINE.insert(0, 'anthill.framework.auth.social.core.pipeline.debug.debug')

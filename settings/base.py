@@ -175,35 +175,100 @@ AUTHENTICATION_BACKEND_MANAGER = {
 
 AUTHENTICATION_BACKENDS = [
     # GOOGLE
-    'anthill.framework.auth.social.backends.google.GoogleOAuth2',
+    'anthill.framework.auth.social.core.backends.google.GoogleOAuth2',
 
     # FACEBOOK
-    'anthill.framework.auth.social.backends.facebook.FacebookOAuth2',
-    'anthill.framework.auth.social.backends.facebook.FacebookAppOAuth2',
+    'anthill.framework.auth.social.core.backends.facebook.FacebookOAuth2',
+    'anthill.framework.auth.social.core.backends.facebook.FacebookAppOAuth2',
 
     # VK
-    'anthill.framework.auth.social.backends.vk.VKontakteOpenAPI',
-    'anthill.framework.auth.social.backends.vk.VKAppOAuth2',
-    'anthill.framework.auth.social.backends.vk.VKOAuth2',
+    'anthill.framework.auth.social.core.backends.vk.VKontakteOpenAPI',
+    'anthill.framework.auth.social.core.backends.vk.VKAppOAuth2',
+    'anthill.framework.auth.social.core.backends.vk.VKOAuth2',
 
     # MAILRU
-    'anthill.framework.auth.social.backends.mailru.MailruOAuth2',
+    'anthill.framework.auth.social.core.backends.mailru.MailruOAuth2',
 
     # STEAM
-    'anthill.framework.auth.social.backends.steam.SteamOpenId',
+    'anthill.framework.auth.social.core.backends.steam.SteamOpenId',
 
     # GITHUB
-    'anthill.framework.auth.social.backends.github.GithubOAuth2',
+    'anthill.framework.auth.social.core.backends.github.GithubOAuth2',
 
     # DISCORD
-    'anthill.framework.auth.social.backends.discord.DiscordOAuth2',
+    'anthill.framework.auth.social.core.backends.discord.DiscordOAuth2',
 
     # JWT
     'anthill.framework.auth.backends.JWTBackend',
 
     # LOGIN/PASSWORD
-    'anthill.framework.auth.backends.ModelBackend'
+    'anthill.framework.auth.backends.ModelBackend',
 ]
+
+
+PIPELINE = [
+    # Get the information we can about the user and return it in a simple
+    # format to create the user instance later. On some cases the details are
+    # already part of the auth response from the provider, but sometimes this
+    # could hit a provider API.
+    'anthill.framework.auth.social.core.pipeline.social_auth.social_details',
+
+    # Get the social uid from whichever service we're authing thru. The uid is
+    # the unique identifier of the given user in the provider.
+    'anthill.framework.auth.social.core.pipeline.social_auth.social_uid',
+
+    # Verifies that the current auth process is valid within the current
+    # project, this is where emails and domains whitelists are applied (if
+    # defined).
+    'anthill.framework.auth.social.core.pipeline.social_auth.auth_allowed',
+
+    # Checks if the current social-account is already associated in the site.
+    'anthill.framework.auth.social.core.pipeline.social_auth.social_user',
+
+    # Make up a username for this person, appends a random string at the end if
+    # there's any collision.
+    'anthill.framework.auth.social.core.pipeline.user.get_username',
+
+    # Send a validation email to the user to verify its email address.
+    # 'social_core.pipeline.mail.mail_validation',
+
+    # Associates the current social details with another user account with
+    # a similar email address.
+    # 'social_core.pipeline.social_auth.associate_by_email',
+
+    # Create a user account if we haven't found one yet.
+    'anthill.framework.auth.social.core.pipeline.user.create_user',
+
+    # Create the record that associated the social account with this user.
+    'anthill.framework.auth.social.core.pipeline.social_auth.associate_user',
+
+    # Populate the extra_data field in the social record with the values
+    # specified by settings (and the default ones like access_token, etc).
+    'anthill.framework.auth.social.core.pipeline.social_auth.load_extra_data',
+
+    # Update the user record with any changed info from the auth service.
+    'anthill.framework.auth.social.core.pipeline.user.user_details',
+]
+
+DISCONNECT_PIPELINE = [
+    # Verifies that the social association can be disconnected from the current
+    # user (ensure that the user login mechanism is not compromised by this
+    # disconnection).
+    'anthill.framework.auth.social.core.pipeline.disconnect.allowed_to_disconnect',
+
+    # Collects the social associations to disconnect.
+    'anthill.framework.auth.social.core.pipeline.disconnect.get_entries',
+
+    # Revoke any access_token when possible.
+    'anthill.framework.auth.social.core.pipeline.disconnect.revoke_tokens',
+
+    # Removes the social associations.
+    'anthill.framework.auth.social.core.pipeline.disconnect.disconnect',
+]
+
+SOCIAL_AUTH_STRATEGY = 'anthill.framework.auth.social.strategy.TornadoStrategy'
+SOCIAL_AUTH_STORAGE = 'anthill.framework.auth.social.models.TornadoStorage'
+
 
 JWT_AUTHENTICATION = {
     'JWT_ENCODE_HANDLER': 'anthill.framework.auth.token.jwt.utils.jwt_encode_handler',
@@ -232,66 +297,3 @@ JWT_AUTHENTICATION = {
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
     'JWT_AUTH_COOKIE': None,
 }
-
-SOCIAL_AUTH_STRATEGY = 'anthill.framework.auth.social.strategy.TornadoStrategy'
-SOCIAL_AUTH_STORAGE = 'anthill.framework.auth.social.models.TornadoStorage'
-
-SOCIAL_AUTH_PIPELINE = [
-    # Get the information we can about the user and return it in a simple
-    # format to create the user instance later. On some cases the details are
-    # already part of the auth response from the provider, but sometimes this
-    # could hit a provider API.
-    'anthill.framework.auth.social.pipeline.social_auth.social_details',
-
-    # Get the social uid from whichever service we're authing thru. The uid is
-    # the unique identifier of the given user in the provider.
-    'anthill.framework.auth.social.pipeline.social_auth.social_uid',
-
-    # Verifies that the current auth process is valid within the current
-    # project, this is where emails and domains whitelists are applied (if
-    # defined).
-    'anthill.framework.auth.social.pipeline.social_auth.auth_allowed',
-
-    # Checks if the current social-account is already associated in the site.
-    'anthill.framework.auth.social.pipeline.social_auth.social_user',
-
-    # Make up a username for this person, appends a random string at the end if
-    # there's any collision.
-    'anthill.framework.auth.social.pipeline.user.get_username',
-
-    # Send a validation email to the user to verify its email address.
-    # 'anthill.framework.auth.social.pipeline.mail.mail_validation',
-
-    # Associates the current social details with another user account with
-    # a similar email address.
-    # 'anthill.framework.auth.social.pipeline.social_auth.associate_by_email',
-
-    # Create a user account if we haven't found one yet.
-    'anthill.framework.auth.social.pipeline.user.create_user',
-
-    # Create the record that associated the social account with this user.
-    'anthill.framework.auth.social.pipeline.social_auth.associate_user',
-
-    # Populate the extra_data field in the social record with the values
-    # specified by settings (and the default ones like access_token, etc).
-    'anthill.framework.auth.social.pipeline.social_auth.load_extra_data',
-
-    # Update the user record with any changed info from the auth service.
-    'anthill.framework.auth.social.pipeline.user.user_details'
-]
-
-SOCIAL_AUTH_DISCONNECT_PIPELINE = [
-    # Verifies that the social association can be disconnected from the current
-    # user (ensure that the user login mechanism is not compromised by this
-    # disconnection).
-    'anthill.framework.auth.social.pipeline.disconnect.allowed_to_disconnect',
-
-    # Collects the social associations to disconnect.
-    'anthill.framework.auth.social.pipeline.disconnect.get_entries',
-
-    # Revoke any access_token when possible.
-    'anthill.framework.auth.social.pipeline.disconnect.revoke_tokens',
-
-    # Removes the social associations.
-    'anthill.framework.auth.social.pipeline.disconnect.disconnect'
-]
